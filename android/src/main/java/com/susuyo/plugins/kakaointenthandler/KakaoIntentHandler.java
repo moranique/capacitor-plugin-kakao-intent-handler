@@ -60,6 +60,15 @@ public class KakaoIntentHandler extends Plugin {
             // capacitor://app.moranique.com
             bridge.getWebView().loadUrl(url.toString().replace("capacitor:", "https:"));
             return true;
+        } else if (url.getScheme().equals("tel")) {
+            try {
+                Intent intent = Intent.parseUri(url.toString(), Intent.URI_INTENT_SCHEME);
+                getContext().startActivity(intent);
+                return true;
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+                return false;
+            }
         } else {
             return false;
         }
