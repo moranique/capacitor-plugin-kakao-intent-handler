@@ -27,17 +27,6 @@ public class KakaoIntentHandler: CAPPlugin {
             webView.load(request)
             return true
         }
-
-        // 카카오톡 딥링크 (카카오링크)
-        let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
-        if ["kakaolink"].contains(navUrl.scheme) {
-            // 카카오톡 실행 가능 여부 확인 후 실행
-            if UIApplication.shared.canOpenURL(navUrl) {
-                UIApplication.shared.open(navUrl, options: [:], completionHandler: nil)
-            }
-            return true
-        }
-        
         
         // 카카오톡 소셜 로그인
         if (isKakaotalkScheme) {
@@ -50,6 +39,16 @@ public class KakaoIntentHandler: CAPPlugin {
                 self.webView.load(request)
                 return true;
             }
+        }
+
+        // 카카오톡 딥링크 (카카오링크)
+        let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
+        if ["kakaolink"].contains(navUrl.scheme) {
+            // 카카오톡 실행 가능 여부 확인 후 실행
+            if UIApplication.shared.canOpenURL(navUrl) {
+                UIApplication.shared.open(navUrl, options: [:], completionHandler: nil)
+            }
+            return true
         }
         return nil
     }
