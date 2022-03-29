@@ -19,15 +19,6 @@ public class KakaoIntentHandler: CAPPlugin {
     public override func shouldOverrideLoad(_ navigationAction: WKNavigationAction!) -> NSNumber! {
         var navUrl = navigationAction.request.url!
         
-        // 카카오톡 로그인 이후 들어오는 분기
-        if (navUrl.scheme?.starts(with: "capacitor") == true) {
-            navUrl = URL.init(string: navUrl.absoluteString.replacingOccurrences(of: CAPBridge.CAP_DEFAULT_SCHEME, with: "https"))!
-            let request = URLRequest(url: navUrl)
-            // api.moranique.com 으로 넘어오는 url을 웹뷰로 로드시켜준다.
-            webView.load(request)
-            return true
-        }
-        
         // 카카오톡 소셜 로그인
         let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
         if (isKakaotalkScheme) {
