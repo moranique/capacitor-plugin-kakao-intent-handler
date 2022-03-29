@@ -29,6 +29,7 @@ public class KakaoIntentHandler: CAPPlugin {
         }
         
         // 카카오톡 소셜 로그인
+        let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
         if (isKakaotalkScheme) {
             // 카카오톡이 설치된 경우
             if UIApplication.shared.canOpenURL(navUrl) {
@@ -42,7 +43,6 @@ public class KakaoIntentHandler: CAPPlugin {
         }
 
         // 카카오톡 딥링크 (카카오링크)
-        let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
         if ["kakaolink"].contains(navUrl.scheme) {
             // 카카오톡 실행 가능 여부 확인 후 실행
             if UIApplication.shared.canOpenURL(navUrl) {
