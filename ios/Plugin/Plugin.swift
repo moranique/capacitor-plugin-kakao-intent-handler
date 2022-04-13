@@ -17,8 +17,10 @@ public class KakaoIntentHandler: CAPPlugin {
     }
     
     public override func shouldOverrideLoad(_ navigationAction: WKNavigationAction!) -> NSNumber! {
-        var navUrl = navigationAction.request.url!
+        let navUrl = navigationAction.request.url!
         
+        self.webView.allowsBackForwardNavigationGestures = true
+
         // 카카오톡 소셜 로그인
         let isKakaotalkScheme = navUrl.path.starts(with: SCHEME_KAKAOTALK)
         if (isKakaotalkScheme) {
