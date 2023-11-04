@@ -1,9 +1,12 @@
 package com.susuyo.plugins.kakaointenthandler;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.content.Intent;
+import android.webkit.URLUtil;
 
 import com.getcapacitor.JSObject;
 import com.getcapacitor.NativePlugin;
@@ -28,49 +31,79 @@ public class KakaoIntentHandler extends Plugin {
 
     @PluginMethod
     public Boolean shouldOverrideLoad(Uri url) {
-        if (url.getScheme().equals("intent")) {
+
+        String path = url.toString();
+
+        if (!URLUtil.isNetworkUrl(path) && !URLUtil.isJavaScriptUrl(path)) {
+            final Uri uri;
+
             try {
-                // Intent 생성
-                Intent intent = Intent.parseUri(url.toString(), Intent.URI_INTENT_SCHEME);
-
-                Context context = getContext();
-                // 실행 가능한 앱이 있으면 앱 실행
-                if (intent.resolveActivity(context.getPackageManager()) != null) {
-                    context.startActivity(intent);
-                    Log.d(TAG, "ACTIVITY: ${intent.`package`}");
-                    return true;
-                }
-
-                // Fallback URL이 있으면 현재 웹뷰에 로딩
-                String fallbackUrl = intent.getStringExtra("browser_fallback_url");
-                if (fallbackUrl != null) {
-                    bridge.getWebView().loadUrl(fallbackUrl);
-                    Log.d(TAG, "FALLBACK: $fallbackUrl");
-                    return true;
-                }
-
-                Log.e(TAG, "Could not parse anythings");
-                return false;
-
-            } catch (URISyntaxException e) {
-                Log.e(TAG, "Invalid intent request", e);
+                uri = Uri.parse(path);
+            } catch (Exception e) {
                 return false;
             }
-        } else if (url.getScheme().equals("capacitor")) {
-            // capacitor://app.moranique.com
-            bridge.getWebView().loadUrl(url.toString().replace("capacitor:", "https:"));
-            return true;
-        } else if (url.getScheme().equals("tel")) {
-            try {
-                Intent intent = Intent.parseUri(url.toString(), Intent.URI_INTENT_SCHEME);
-                getContext().startActivity(intent);
+
+            Context context = getContext();
+
+            if ("intent".equals(uri.getScheme())) {
+                return startSchemeIntent(path);
+            } else if (url.getScheme().equals("capacitor")) {
+                // capacitor://app.moranique.com
+                bridge.getWebView().loadUrl(url.toString().replace("capacitor:", "https:"));
                 return true;
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                return false;
+            } else if (url.getScheme().equals("tel")) {
+                try {
+                    Intent intent = Intent.parseUri(url.toString(), Intent.URI_INTENT_SCHEME);
+                    getContext().startActivity(intent);
+                    return true;
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            }  else {
+                try {
+                    context.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
             }
-        } else {
+        }
+        return false;
+    }
+
+    private boolean startSchemeIntent(String url) {
+        final Intent schemeIntent;
+
+        try {
+            schemeIntent = Intent.parseUri(url, Intent.URI_INTENT_SCHEME);
+        } catch (URISyntaxException e) {
             return false;
         }
+
+        Context context = getContext();
+
+        // Fallback URL이 있으면 현재 웹뷰에 로딩
+        String fallbackUrl = schemeIntent.getStringExtra("browser_fallback_url");
+        if (fallbackUrl != null) {
+            bridge.getWebView().loadUrl(fallbackUrl);
+            Log.d(TAG, "FALLBACK: $fallbackUrl");
+            return true;
+        }
+
+        try {
+            context.startActivity(schemeIntent);
+            Log.d(TAG, "ACTIVITY: ${intent.`package`}");
+            return true;
+        } catch (ActivityNotFoundException e) {
+            final String packageName = schemeIntent.getPackage();
+            Log.d(TAG, "Not Package: ${intent.`package`}");
+            if (!TextUtils.isEmpty(packageName)) {
+                context.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + packageName)));
+                return true;
+            }
+        }
+
+        return false;
     }
 }
